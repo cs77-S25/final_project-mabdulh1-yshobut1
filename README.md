@@ -5,7 +5,7 @@ Maryam Abdulhussein and Yara Shobut
 Welcome to SwatSwap, a student-centered, cash-free bartering platform built for the Swarthmore College community. SwatSwap lets users give, trade, and request items — from clothes and books to furniture and plants — in a way that's sustainable, ethical, and free.
 
 ## Features
-SCCS Login Integration: Secure Swarthmore login using SCCS credentials.
+SCCS Login Integration: Secure Swarthmore login using SCCS credentials. maybe idk
 
 Product Listings: Post, edit, and manage items you want to give away, trade, or request.
 
