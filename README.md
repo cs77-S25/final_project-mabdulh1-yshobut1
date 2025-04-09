@@ -5,32 +5,28 @@ Maryam Abdulhussein and Yara Shobut
 Welcome to SwatSwap, a student-centered, cash-free bartering platform built for the Swarthmore College community. SwatSwap lets users give, trade, and request items — from clothes and books to furniture and plants — in a way that's sustainable, ethical, and free.
 
 ## Features
-SCCS Login Integration: Secure Swarthmore login using SCCS credentials. maybe idk
+SCCS Login Integration: Secure Swarthmore login using SCCS credentials. NOT IMPLEMENTED YET BC NO DATABASE YET.
 
-Product Listings: Post, edit, and manage items you want to give away, trade, or request.
+Product Listings: Post, edit, and manage items you want to give away, trade, or request. Partially implemented so far.
 
-Flexible Trade Options: Support for 1:1 swaps, multi-item trades, and “free” (giveaway) listings.
+Favorites List: Keep track of items you're hoping to receive in the future.
 
-Wishlist System: Keep track of items you're hoping to receive in the future.
-
-Messaging: In-platform chat for arranging swaps and asking questions.
-
-Follow & Recommend: Follow friends or trusted traders and get item recommendations.
+Messaging: In-platform chat for arranging swaps and asking questions. NOT YET! this is a stretch goal.
 
 Search & Filter: Sort by category, condition, and trade type.
 
-Notifications: Get alerted when someone messages you or responds to your item.
+Notifications: Get alerted when someone messages you or responds to your item. Not yet!
 
 ## Technology Stack
 
-- Backend: Node.js, Express
-- Database: 
-- Frontend: Next.js, Redux for state management
-- Authentication: SCCS login or EmailJS for contact
-- File Storage: Cloudinary
-- File Handling: Multer
-- Email Handling: EmailJS for contact form
-- Deployment: Vercel
+- Backend: Node.js, React, Axios
+- Database: Nothing yet — currently using localStorage for mocking functionality.
+- API Handling: Axios
+- Frontend: Next.js, Tailwind CSS, Javascript/React
+- Authentication: not yet -- waiting for database
+- File Storage: none (maybe firebase/Cloudinary)
+- Email Handling: emailjs but we dont have it working fully yet
+- Deployment: we talked about vercel/render
 
 ## Getting Started
 
