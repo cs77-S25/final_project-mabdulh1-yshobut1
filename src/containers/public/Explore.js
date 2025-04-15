@@ -61,6 +61,7 @@ const Explore = () => {
 			{products.length > 0 ? (
 				<section className="mx-auto max-w-7xl p-8 grid gap-8 grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]">
 					{products.map((product) => (
+						console.log("loaded product: ", product),
 					<div
 						key={product.id}
 						className="relative max-w-xs shadow-md duration-500 hover:scale-105 hover:shadow-2xl overflow-hidden h-80 rounded-xl"
@@ -68,7 +69,7 @@ const Explore = () => {
 						<Link href="#">
 						<div className="relative w-full h-full">
 							<Image
-							src={product.image || "/noImage.svg"} // fallback if image is missing
+							src={product.imageURL || "/noImage.svg"} // fallback if image is missing
 							alt="Product image"
 							fill
 							className="object-cover rounded-xl border border-black"
