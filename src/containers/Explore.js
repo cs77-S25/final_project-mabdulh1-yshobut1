@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Empty } from "antd";
+import { getDocs, collection } from "firebase/firestore";
+import { db } from "@/utils/firebase";
+
 
 // Static path to default profile image in public folder
 const defaultProfile = "/defaultProfile.svg";
@@ -13,11 +16,25 @@ const Explore = () => {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		// Load mock products from localStorage
-		const localProducts = JSON.parse(localStorage.getItem("mockProducts")) || [];
-		setProducts(localProducts);
-		setLoading(false);
+		const fetchProducts = async () => {
+			try {
+				const querySnapshot = await getDocs(collection(db, "listings"));
+				const fetchedProducts = [];
+				querySnapshot.forEach((doc) => {
+					fetchedProducts.push({ id: doc.id, ...doc.data() });
+				});
+				setProducts(fetchedProducts);
+			} catch (error) {
+				console.error("Error fetching products:", error);
+			} finally {
+				setLoading(false);
+			}
+		};
+		
+	
+		fetchProducts();
 	}, []);
+	
 
 	if (loading) {
 		return (
@@ -42,22 +59,20 @@ const Explore = () => {
 							href={`/product/${product.id}`}
 							className="relative max-w-xs shadow-md duration-500 hover:scale-105 hover:shadow-2xl overflow-hidden h-80 rounded-xl"
 						>
+							<div className="relative w-full h-full">
 							<Image
 								src={product.image}
 								alt="Product image"
-								layout="fill"
-								objectFit="cover"
-								className="border-black border rounded-xl"
+								fill
+								className="object-cover rounded-xl border border-black"
 							/>
+							</div>
 
 							<section className="p-4 opacity-0 hover:opacity-100 duration-300 absolute inset-0 z-10 bg-[#000000d9] text-white flex flex-col justify-end">
-								<p className="text-sm">
-									{product.isBarter
-										? product.price
-											? "Hybrid"
-											: "Barter"
-										: "Sale"}
-								</p>
+							<p className="text-sm">
+								{product.giveAway ? "Giveaway" : "Swap"}
+							</p>
+
 								<p className="uppercase tracking-wide text-lg font-bold">
 									{product.title}
 								</p>

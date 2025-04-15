@@ -1,6 +1,5 @@
 // firestoreUtils.js
-
-import { db } from "./firebase";
+import { auth, db } from "./firebase";
 import {
   doc,
   setDoc,
@@ -52,13 +51,26 @@ export const getUserById = async (uid) => {
 // Add a new listing
 export const addListing = async (listing) => {
   try {
-    const docRef = await addDoc(collection(db, "listings"), {
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error("User not logged in");
+
+    const userDocRef = doc(db, "users", currentUser.uid);
+    const userSnap = await getDoc(userDocRef);
+    const userData = userSnap.exists() ? userSnap.data() : {};
+
+    const listingWithUser = {
       ...listing,
-      isVisible: true,
-      date: new Date().toISOString().split("T")[0], // YYYY-MM-DD
-      time: new Date().toLocaleTimeString(),        // HH:MM:SS
+      user_id: currentUser.uid,
+      user: {
+        name: userData.name || "",
+        email: userData.email || "",
+        bio: userData.bio || "",
+        avatar: "/defaultProfile.svg", // or userData.avatar if you allow avatar uploads
+      },
       createdAt: serverTimestamp()
-    });
+    };
+
+    const docRef = await addDoc(collection(db, "listings"), listingWithUser);
     console.log("Listing added with ID:", docRef.id);
     return docRef.id;
   } catch (error) {

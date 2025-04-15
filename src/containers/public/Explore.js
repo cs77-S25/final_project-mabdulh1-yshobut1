@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "./Navbar";
+import { getDocs, collection } from "firebase/firestore";
+import { db } from "@/utils/firebase";
+
 
 // Ant Design's Empty component which shows a message when there's no content
 import { Empty } from "antd";
@@ -15,13 +18,24 @@ const Explore = () => {
 
 	// Runs after the component is added
 	useEffect(() => {
-		const fetchProducts = () => {
-			const localProducts = JSON.parse(localStorage.getItem("mockProducts")) || [];
-			setProducts(localProducts);  // Store fetched products in state
-			setLoading(false);           // Loading complete  
+		const fetchProducts = async () => {
+			try {
+				const querySnapshot = await getDocs(collection(db, "listings"));
+				const listings = [];
+				querySnapshot.forEach((doc) => {
+					listings.push({ id: doc.id, ...doc.data() });
+				});
+				setProducts(listings);
+			} catch (error) {
+				console.error("Error fetching listings:", error);
+			} finally {
+				setLoading(false);
+			}
 		};
-		fetchProducts(); 
-	}, []); // Empty dependency array = run only once component's added 
+	
+		fetchProducts();
+	}, []);
+	
 
 	//show loader if loading
 	if (loading) {
@@ -51,13 +65,15 @@ const Explore = () => {
 							href="#" // we can make this dynamic later
 							className="relative max-w-xs shadow-md duration-500 hover:scale-105 hover:shadow-2xl overflow-hidden h-80 rounded-xl"
 						>
+							<div className="relative w-full h-full">
 							<Image
 								src={product.image}
 								alt="Product image"
-								layout="fill"
-								objectFit="cover"
-								className="border-black border rounded-xl"
+								fill 
+								className="object-cover rounded-xl border border-black"
 							/>
+							</div>
+
 
 							{/* Overlay info on hover */}
 							<section className="p-4 opacity-0 hover:opacity-100 duration-300 absolute inset-0 z-10 bg-[#000000d9] text-white flex flex-col justify-end">

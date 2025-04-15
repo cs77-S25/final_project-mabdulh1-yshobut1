@@ -20,11 +20,12 @@ export default function Home() {
 							Swarthmore students, swap what you don’t need for what you do — sustainably, ethically, and for free.
 						</p>
 						<Link
-							href="/explore"
+							href="/login"
 							className="inline-flex items-center justify-center px-5 py-3 text-base font-medium text-center border rounded-lg focus:ring-4 text-white border-white-700 hover:bg-maroon-700 focus:ring-white"
 						>
 							Start Swapping
 						</Link>
+
 					</div>
 
 					{/* Right side image */}

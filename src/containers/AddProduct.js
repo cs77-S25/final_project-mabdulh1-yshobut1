@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { db, auth } from "@/utils/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+
 
 // toast for notifications : future implementation!!
 import toast, { Toaster } from "react-hot-toast";
@@ -44,34 +47,42 @@ const AddProduct = () => {
 	const handleSubmit = async (event) => {
 		event.preventDefault();
 		const toastId = toast.loading("Saving product...");
-
+	
 		try {
-			// create new product object
-			const newProduct = {
-				id: Date.now(), // unique ID using timestamp
-				...credentials,
-				image: imageURL,
+			const user = auth.currentUser;
+	
+			if (!user) {
+				toast.error("You must be logged in to add a product.", { id: toastId });
+				return;
+			}
+	
+			const listing = {
+				title: credentials.title,
+				description: credentials.description,
+				condition: credentials.condition,
+				category: credentials.category,
+				giveAway: credentials.giveAway,
+				meetingSpot: credentials.meetingSpot,
+				imageURL: imageURL, // assuming you’ll replace this with a real image URL later
+				user_id: user.uid,
+				date: new Date().toISOString().split("T")[0], // e.g. "2025-04-15"
+				time: new Date().toLocaleTimeString(),        // e.g. "01:29:16"
+				createdAt: serverTimestamp(),
 			};
 	
-			// save product to localStorage (mock database for now)
-			const existing = JSON.parse(localStorage.getItem("mockProducts")) || [];
-			localStorage.setItem("mockProducts", JSON.stringify([...existing, newProduct]));
+			await addDoc(collection(db, "listings"), listing);
 	
-			// success notification
 			toast.success("Product added!", { id: toastId });
-
-			// reset form
 			setCredentials(defaultCredentials);
 			setPostFile(null);
 			setImageURL("/uploadFile.svg");
-
-			// redirect to explore page
 			router.push("/explore");
 		} catch (error) {
 			console.error(error);
 			toast.error("Error saving product", { id: toastId });
 		}
 	};
+	
 	
 	//cancel button
 	const cancelForm = () => {

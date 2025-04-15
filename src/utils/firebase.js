@@ -1,8 +1,10 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { collection, addDoc } from "firebase/firestore"; 
-import { collection, getDocs } from "firebase/firestore"; 
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { collection, addDoc, getDocs } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+
 
 
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -22,29 +24,24 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app);
-// const db = getFirestore(app);``
+export const db = getFirestore(app);
+export const auth = getAuth(app);
 
+// Automatically add user to Firestore on login
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const userRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userRef);
 
-// Initialize Cloud Firestore and get a reference to the service
-const db = getFirestore(app);
-
-
-//Add Data 
-try {
-  const docRef = await addDoc(collection(db, "users"), {
-    first: "Ada",
-    last: "Lovelace",
-    born: 1815
-  });
-  console.log("Document written with ID: ", docRef.id);
-} catch (e) {
-  console.error("Error adding document: ", e);
-}
-
-
-//Read Data
-const querySnapshot = await getDocs(collection(db, "users"));
-querySnapshot.forEach((doc) => {
-  console.log(`${doc.id} => ${doc.data()}`);
+    if (!docSnap.exists()) {
+      await setDoc(userRef, {
+        id: user.uid,
+        name: user.displayName || "",
+        email: user.email,
+        bio: "",
+        favorites: [],
+      });
+      console.log("User added to Firestore");
+    }
+  }
 });
