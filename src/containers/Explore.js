@@ -8,7 +8,7 @@ import { getDocs, collection } from "firebase/firestore";
 import { db } from "@/utils/firebase";
 
 
-// Static path to default profile image in public folder
+// path to default profile image in public folder
 const defaultProfile = "/defaultProfile.svg";
 
 const Explore = () => {
@@ -16,6 +16,7 @@ const Explore = () => {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
+		//get and display the products
 		const fetchProducts = async () => {
 			try {
 				const querySnapshot = await getDocs(collection(db, "listings"));

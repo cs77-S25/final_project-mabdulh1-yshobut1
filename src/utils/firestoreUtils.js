@@ -1,4 +1,3 @@
-// firestoreUtils.js
 import { auth, db } from "./firebase";
 import {
   doc,
@@ -12,9 +11,8 @@ import {
   serverTimestamp
 } from "firebase/firestore";
 
-// ========== USER FUNCTIONS ========== //
 
-// Add a new user to Firestore
+// Add new user to Firestore
 export const addUser = async ({ uid, name, email, bio = "" }) => {
   try {
     await setDoc(doc(db, "users", uid), {
@@ -46,8 +44,6 @@ export const getUserById = async (uid) => {
   }
 };
 
-// ========== LISTING FUNCTIONS ========== //
-
 // Add a new listing
 export const addListing = async (listing) => {
   try {
@@ -65,7 +61,7 @@ export const addListing = async (listing) => {
         name: userData.name || "",
         email: userData.email || "",
         bio: userData.bio || "",
-        avatar: "/defaultProfile.svg", // or userData.avatar if you allow avatar uploads
+        avatar: "/defaultProfile.svg",  
       },
       createdAt: serverTimestamp()
     };

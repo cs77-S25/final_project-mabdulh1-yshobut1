@@ -1,8 +1,3 @@
-// utils/authUtils.js
-// import { onAuthStateChanged } from "firebase/auth";
-// import { auth } from "./firebase";
-// import { addUser } from "./firestoreUtils";
-
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase"; 
@@ -15,7 +10,7 @@ export const setupUserListener = () => {
 				uid: user.uid,
 				name: user.displayName || "Unnamed User",
 				email: user.email,
-				bio: "" // default
+				bio: "" // default / dummy val
 			});
 		}
 	});

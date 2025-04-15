@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios"; 
-import { Dropdown } from "antd"; // UI dropdown component
+import { Dropdown } from "antd";  
 
 // Static path to default profile image in public folder
 const defaultProfile = "/defaultProfile.svg";
@@ -14,19 +14,18 @@ const Navbar = () => {
 	// State hooks!!
 	const [userDetails, setUserDetails] = useState(null); // Holds user data (currently dummy users)
 	const [isLoggedIn, setIsLoggedIn] = useState(true);   // conditionally render profile dropdown
-	const [loading, setLoading] = useState(true);         // shows a loading state at first
+	const [loading, setLoading] = useState(true);          
 
 	// useEffect simulates fetching user info (mocked for now)
 	useEffect(() => {
 		const fetchUser = async () => {
 			try {
-				// fake/mocked user object
 				const user = { user: { data: { data: {} } } };
 
 				if (user?.data?.data) {
 					setIsLoggedIn(false); // Simulate user not logged in
 					const userDetails = user.data.data;
-					setUserDetails(userDetails); // Store user data (if available)
+					setUserDetails(userDetails);  
 				}
 			} catch (error) {
 				console.log(error); // logging any fetch error

@@ -10,9 +10,7 @@ import { deleteDoc, doc } from "firebase/firestore";
 import { auth } from "@/utils/firebase";
 import toast, { Toaster } from "react-hot-toast";
 
-
-
-// Ant Design's Empty component which shows a message when there's no content
+// shows a message when there's no content
 import { Empty } from "antd";
 
 // display a grid of product cards
@@ -40,7 +38,6 @@ const Explore = () => {
 		fetchProducts();
 	}, []);
 	
-
 	//show loader if loading
 	if (loading) {
 		return (

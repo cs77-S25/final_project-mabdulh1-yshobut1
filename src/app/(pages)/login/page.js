@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { auth } from "@/utils/firebase";
 import "firebaseui/dist/firebaseui.css";
 
-// Firebase Auth imports (modular)
+// Firebase Auth imports  
 import {
   setPersistence,
   browserLocalPersistence,
@@ -12,11 +12,12 @@ import {
   GoogleAuthProvider,
 } from "firebase/auth";
 
-// IMPORTANT: FirebaseUI must be imported **inside** the client-only check
 let firebaseui;
 
+//login logic 
 const LoginPage = () => {
   useEffect(() => {
+    //handle undefined window error
     if (typeof window !== "undefined") {
       firebaseui = require("firebaseui");
 
@@ -24,6 +25,7 @@ const LoginPage = () => {
         console.error("Persistence error:", error);
       });
 
+      //real login implementation -- connect to google sign in
       const ui =
         firebaseui.auth.AuthUI.getInstance() ||
         new firebaseui.auth.AuthUI(auth);
@@ -56,7 +58,7 @@ const LoginPage = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
       <h1 className="text-2xl font-bold mb-2 text-maroon-900">Welcome to SwatSwap</h1>
       <p className="text-sm mb-4 text-gray-700">
-        Log in to your account — or create one if you’re new!
+        Log in to your account — or create one if you're new!
       </p>
       <div id="firebaseui-auth-container" />
       <div id="loader">Loading...</div>

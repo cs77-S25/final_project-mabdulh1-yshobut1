@@ -6,9 +6,7 @@ import Image from "next/image";
 import { db, auth } from "@/utils/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "@/utils/firebase"; // export this from firebase.js
-
-
+import { storage } from "@/utils/firebase";  
 
 // toast for notifications : future implementation!!
 import toast, { Toaster } from "react-hot-toast";
@@ -23,7 +21,7 @@ const defaultCredentials = {
 };
 
 const handleFileChange = (event) => {
-	const file = event.target.files?.[0]; // optional chaining to be safe
+	const file = event.target.files?.[0]; // chaining to be safe
 	if (!file) {
 	  console.error("No file selected or invalid file");
 	  return;
@@ -39,7 +37,7 @@ const AddProduct = () => {
 
 	// states
 	const [credentials, setCredentials] = useState(defaultCredentials); // stores product info
-	const [postFile, setPostFile] = useState(null); // stores selected file (unused beyond preview)
+	const [postFile, setPostFile] = useState(null); 
 	const [imageURL, setImageURL] = useState("/uploadFile.svg"); // Local preview of image
 	const [formStatus, setFormStatus] = useState(""); // form error status
 
@@ -108,8 +106,6 @@ const AddProduct = () => {
 		}
 	};
 	
-	
-	
 	//cancel button
 	const cancelForm = () => {
 		setCredentials(defaultCredentials); // reset form
@@ -118,7 +114,7 @@ const AddProduct = () => {
 
 	return (
 		<>
-			<Toaster /> {/* Notification toaster */}
+			<Toaster /> {/* Notification toaster : WILL IMPLEMENT MORE LOGIC LATER*/}
 			<div className="flex items-center justify-center">
 				<div className="container max-w-screen-lg mx-auto pb-12 sm:pb-0">
 					<div>

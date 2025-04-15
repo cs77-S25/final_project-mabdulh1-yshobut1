@@ -1,4 +1,3 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { collection, addDoc, getDocs } from "firebase/firestore";
@@ -6,13 +5,10 @@ import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 
-
-
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAk5siIzNE7DDvZ6j7U1BOYGAJ7X8UuFYA",
   authDomain: "swatswap-3dd41.firebaseapp.com",
