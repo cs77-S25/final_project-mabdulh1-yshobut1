@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { db, auth } from "@/utils/firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "@/utils/firebase"; // export this from firebase.js
+
 
 
 // toast for notifications : future implementation!!
@@ -18,6 +21,18 @@ const defaultCredentials = {
 	giveAway: false,
 	meetingSpot: "",
 };
+
+const handleFileChange = (event) => {
+	const file = event.target.files?.[0]; // optional chaining to be safe
+	if (!file) {
+	  console.error("No file selected or invalid file");
+	  return;
+	}
+  
+	setPostFile(file);
+	setImageURL(URL.createObjectURL(file));
+  };
+  
 
 const AddProduct = () => {
 	const router = useRouter(); // redirects after form submission
@@ -49,39 +64,50 @@ const AddProduct = () => {
 		const toastId = toast.loading("Saving product...");
 	
 		try {
+			// Ensure user is logged in
 			const user = auth.currentUser;
-	
 			if (!user) {
-				toast.error("You must be logged in to add a product.", { id: toastId });
+				toast.error("User not logged in", { id: toastId });
 				return;
 			}
 	
-			const listing = {
-				title: credentials.title,
-				description: credentials.description,
-				condition: credentials.condition,
-				category: credentials.category,
-				giveAway: credentials.giveAway,
-				meetingSpot: credentials.meetingSpot,
-				imageURL: imageURL, // assuming you’ll replace this with a real image URL later
+			let imageUrl = "";
+	
+			// Upload the image if a file is selected
+			if (postFile) {
+				const fileRef = ref(storage, `productImages/${postFile.name}`);
+				await uploadBytes(fileRef, postFile); 
+				imageUrl = await getDownloadURL(fileRef);
+			}
+			
+	
+			// Construct listing object
+			const newProduct = {
+				...credentials,
+				imageURL: imageUrl,
 				user_id: user.uid,
-				date: new Date().toISOString().split("T")[0], // e.g. "2025-04-15"
-				time: new Date().toLocaleTimeString(),        // e.g. "01:29:16"
+				date: new Date().toISOString().split("T")[0],
+				time: new Date().toLocaleTimeString(),
 				createdAt: serverTimestamp(),
 			};
 	
-			await addDoc(collection(db, "listings"), listing);
+			// Save listing to Firestore
+			await addDoc(collection(db, "listings"), newProduct);
 	
 			toast.success("Product added!", { id: toastId });
+	
+			// Reset form
 			setCredentials(defaultCredentials);
 			setPostFile(null);
 			setImageURL("/uploadFile.svg");
 			router.push("/explore");
+	
 		} catch (error) {
-			console.error(error);
+			console.error("Error adding product:", error);
 			toast.error("Error saving product", { id: toastId });
 		}
 	};
+	
 	
 	
 	//cancel button

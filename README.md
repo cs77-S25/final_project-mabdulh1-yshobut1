@@ -55,3 +55,9 @@ npm run dev
 ```
 
 - Open your browser and visit `http://localhost:3000` to view the live website.
+
+
+### CHECKPOINT COMMENTS:
+MODEL.PY = MODEL.JS
+IMAGES ARE IN THE WORKS
+APP.PY = APP/API/LISTINGS/ROUTE.JS &&  APP/API/LISTINGS/[ID]/ROUTE.JS (though this is really just for the checkpoint reqs and not actual implementation since that is handled in AddProduct.js, Explore.js)

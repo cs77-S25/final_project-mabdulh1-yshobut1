@@ -6,6 +6,10 @@ import Link from "next/link";
 import Navbar from "./Navbar";
 import { getDocs, collection } from "firebase/firestore";
 import { db } from "@/utils/firebase";
+import { deleteDoc, doc } from "firebase/firestore";
+import { auth } from "@/utils/firebase";
+import toast, { Toaster } from "react-hot-toast";
+
 
 
 // Ant Design's Empty component which shows a message when there's no content
@@ -60,54 +64,63 @@ const Explore = () => {
 			{products.length > 0 ? (
 				<section className="mx-auto max-w-7xl p-8 grid gap-8 grid-cols-[repeat(auto-fit,minmax(12rem,1fr))]">
 					{products.map((product) => (
-						<Link
-							key={product.id} 
-							href="#" // we can make this dynamic later
-							className="relative max-w-xs shadow-md duration-500 hover:scale-105 hover:shadow-2xl overflow-hidden h-80 rounded-xl"
-						>
-							<div className="relative w-full h-full">
+					<div
+						key={product.id}
+						className="relative max-w-xs shadow-md duration-500 hover:scale-105 hover:shadow-2xl overflow-hidden h-80 rounded-xl"
+					>
+						<Link href="#">
+						<div className="relative w-full h-full">
 							<Image
-								src={product.image}
-								alt="Product image"
-								fill 
-								className="object-cover rounded-xl border border-black"
+							src={product.image || "/noImage.svg"} // fallback if image is missing
+							alt="Product image"
+							fill
+							className="object-cover rounded-xl border border-black"
 							/>
-							</div>
+						</div>
 
+						<section className="p-4 opacity-0 hover:opacity-100 duration-300 absolute inset-0 z-10 bg-[#000000d9] text-white flex flex-col justify-end">
+							<p className="text-sm">Swap</p>
 
-							{/* Overlay info on hover */}
-							<section className="p-4 opacity-0 hover:opacity-100 duration-300 absolute inset-0 z-10 bg-[#000000d9] text-white flex flex-col justify-end">
-								<p className="text-sm">Swap</p>
+							<p className="uppercase tracking-wide text-lg font-bold">
+							{product.title}
+							</p>
 
-								{/* Product title */}
-								<p className="uppercase tracking-wide text-lg font-bold">
-									{product.title}
-								</p>
+							<p className="capitalize text-sm">{product.category}</p>
 
-								{/* Category */}
-								<p className="capitalize text-sm">
-									{product.category}
-								</p>
-
-								{/* Product description */}
-								<div className="mt-2 text-sm">
-									{product.description}
-								</div>
-							</section>
+							<div className="mt-2 text-sm">{product.description}</div>
+						</section>
 						</Link>
+
+						{/* DELETE button if current user owns the listing!!! */}
+						{auth.currentUser?.uid === product.user_id && (
+						<button
+							onClick={async (e) => {
+							e.preventDefault(); // prevent navigating on click
+							try {
+								await deleteDoc(doc(db, "listings", product.id));
+								setProducts(products.filter((p) => p.id !== product.id));
+								toast.success("Listing deleted!");
+							} catch (err) {
+								console.error("Error deleting:", err);
+								toast.error("Error deleting listing");
+							}
+							}}
+							className="absolute top-2 right-2 z-20 bg-red-600 text-white rounded-full p-1 hover:bg-red-800"
+						>
+							✕
+						</button>
+						)}
+					</div>
 					))}
 				</section>
-			) : (
-				// If no products, we show the Empty state with a call-to-action!
+				) : (
 				<Empty description={<p>No products to display</p>}>
-					<Link
-						href="/product/add"
-						className="p-2 bg-[#101827] text-white rounded"
-					>
-						Create Now
+					<Link href="/product/add" className="p-2 bg-[#101827] text-white rounded">
+					Create Now
 					</Link>
 				</Empty>
-			)}
+				)}
+
 
 			{/* add a product */}
 			<Link href="/product/add">
