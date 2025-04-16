@@ -105,3 +105,16 @@ export const getListingsByUserId = async (userId) => {
     return [];
   }
 };
+
+// utils/firestoreUtils.js
+
+export async function getProductById(id) {
+  const docRef = doc(db, 'products', id);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return { id: docSnap.id, ...docSnap.data() };
+  } else {
+    console.log('No such product!');
+    return null;
+  }
+}
