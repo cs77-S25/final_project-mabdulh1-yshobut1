@@ -9,6 +9,7 @@ import { db } from "@/utils/firebase";
 import { deleteDoc, doc } from "firebase/firestore";
 import { auth } from "@/utils/firebase";
 import toast, { Toaster } from "react-hot-toast";
+import { updateDoc, getDoc } from "firebase/firestore";
 
 // shows a message when there's no content
 import { Empty } from "antd";
@@ -17,8 +18,8 @@ import { Empty } from "antd";
 const Explore = () => {
 	const [products, setProducts] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [favorites, setFavorites] = useState([]);
 
-	// Runs after the component is added
 	useEffect(() => {
 		const fetchProducts = async () => {
 			try {
@@ -28,8 +29,19 @@ const Explore = () => {
 					listings.push({ id: doc.id, ...doc.data() });
 				});
 				setProducts(listings);
+	
+				// Get current user's favorites
+				const user = auth.currentUser;
+				if (user) {
+					const userRef = doc(db, "users", user.uid);
+					const userSnap = await getDoc(userRef);
+					if (userSnap.exists()) {
+						const userData = userSnap.data();
+						setFavorites(userData.favorites || []);
+					}
+				}
 			} catch (error) {
-				console.error("Error fetching listings:", error);
+				console.error("Error fetching listings or favorites:", error);
 			} finally {
 				setLoading(false);
 			}
@@ -37,6 +49,50 @@ const Explore = () => {
 	
 		fetchProducts();
 	}, []);
+	
+	const toggleFavorite = async (productId) => {
+		const user = auth.currentUser;
+		if (!user) return;
+	
+		const userRef = doc(db, "users", user.uid);
+		const isFavorite = favorites.includes(productId);
+	
+		const updatedFavorites = isFavorite
+			? favorites.filter((id) => id !== productId)
+			: [...favorites, productId];
+	
+		setFavorites(updatedFavorites); // UI update
+	
+		try {
+			await updateDoc(userRef, {
+				favorites: updatedFavorites,
+			});
+			toast.success(isFavorite ? "Removed from favorites" : "Added to favorites");
+		} catch (error) {
+			console.error("Error updating favorites:", error);
+			toast.error("Couldn't update favorites");
+		}
+	};
+	
+	// Runs after the component is added
+	// useEffect(() => {
+	// 	const fetchProducts = async () => {
+	// 		try {
+	// 			const querySnapshot = await getDocs(collection(db, "listings"));
+	// 			const listings = [];
+	// 			querySnapshot.forEach((doc) => {
+	// 				listings.push({ id: doc.id, ...doc.data() });
+	// 			});
+	// 			setProducts(listings);
+	// 		} catch (error) {
+	// 			console.error("Error fetching listings:", error);
+	// 		} finally {
+	// 			setLoading(false);
+	// 		}
+	// 	};
+	
+	// 	fetchProducts();
+	// }, []);
 	
 	//show loader if loading
 	if (loading) {
@@ -88,6 +144,13 @@ const Explore = () => {
 							<div className="mt-2 text-sm">{product.description}</div>
 						</section>
 						</Link>
+						<button
+							onClick={() => toggleFavorite(product.id)}
+							className="absolute top-2 left-2 z-20 text-white bg-black/40 hover:bg-black/60 rounded-full p-1"
+						>
+							{favorites.includes(product.id) ? "❤️" : "🤍"}
+						</button>
+
 
 						{/* DELETE button if current user owns the listing!!! */}
 						{auth.currentUser?.uid === product.user_id && (
