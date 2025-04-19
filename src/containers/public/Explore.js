@@ -122,7 +122,7 @@ const Explore = () => {
 						key={product.id}
 						className="relative max-w-xs shadow-md duration-500 hover:scale-105 hover:shadow-2xl overflow-hidden h-80 rounded-xl"
 					>
-						<Link href="#">
+						<Link href={`/product/${product.id}`}>
 						<div className="relative w-full h-full">
 							<Image
 							src={product.imageURL || "/noImage.svg"} // fallback if image is missing
