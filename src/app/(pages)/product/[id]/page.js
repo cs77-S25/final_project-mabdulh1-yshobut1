@@ -27,6 +27,8 @@ const ProductDetail = () => {
   const user = auth.currentUser;
   const [myListings, setMyListings] = useState([]);
   const [selectedOfferId, setSelectedOfferId] = useState("");
+  const [swapRequests, setSwapRequests] = useState([]);
+
 
   // Fetch product details
   useEffect(() => {
@@ -42,6 +44,20 @@ const ProductDetail = () => {
         setLoading(false);
       }
     };
+
+    useEffect(() => {
+      const fetchRequests = async () => {
+        if (!user || user.uid !== product?.user_id) return;
+    
+        const requestsRef = collection(db, "listings", product.id, "swapRequests");
+        const snap = await getDocs(requestsRef);
+        const reqs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setSwapRequests(reqs);
+      };
+    
+      fetchRequests();
+    }, [user, product]);
+    
 
     fetchProduct();
   }, [id]);
@@ -76,16 +92,34 @@ const ProductDetail = () => {
       return;
     }
 
+    const updateSwapRequestStatus = async (requestId, status) => {
+      const requestRef = doc(db, "listings", product.id, "swapRequests", requestId);
+      try {
+        await updateDoc(requestRef, { status });
+        toast.success(`Request ${status}`);
+        setSwapRequests(prev =>
+          prev.map(r => r.id === requestId ? { ...r, status } : r)
+        );
+      } catch (err) {
+        toast.error("Failed to update request");
+        console.error(err);
+      }
+    };
+    
+
     try {
       const requestsCol = collection(db, "listings", product.id, "swapRequests");
 
       await addDoc(requestsCol, {
         fromUid: user.uid,
+        fromName: user.displayName || "",
+        fromEmail: user.email || "",
         offeredListing: selectedOfferId,
         message: "",
         status: "pending",
         createdAt: serverTimestamp(),
       });
+      
 
       toast.success("Swap request sent!");
       setProduct(prev => ({
@@ -140,6 +174,37 @@ const ProductDetail = () => {
                 >
                   Delete Listing
                 </button>
+                {swapRequests.length > 0 && (
+  <div className="mt-6">
+    <h2 className="text-xl font-semibold mb-2">Swap Requests:</h2>
+    {swapRequests.map(req => (
+      <div key={req.id} className="border p-4 rounded-lg mb-4 bg-gray-50">
+        <p><strong>From:</strong> {req.fromUid}</p>
+        <p><strong>Offering:</strong> {req.offeredListing}</p>
+        <p><strong>Status:</strong> {req.status}</p>
+        {req.message && <p><strong>Message:</strong> {req.message}</p>}
+
+        {req.status === "pending" && (
+          <div className="flex gap-4 mt-2">
+            <button
+              onClick={() => updateSwapRequestStatus(req.id, "accepted")}
+              className="bg-green-600 text-white px-4 py-1 rounded"
+            >
+              Accept
+            </button>
+            <button
+              onClick={() => updateSwapRequestStatus(req.id, "rejected")}
+              className="bg-red-600 text-white px-4 py-1 rounded"
+            >
+              Reject
+            </button>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+)}
+
               </div>
             ) : (
               <>

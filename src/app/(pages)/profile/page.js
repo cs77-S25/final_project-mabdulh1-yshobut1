@@ -146,11 +146,23 @@ const ProfilePage = () => {
               Save Changes
             </button>
           </div>
-
+          
           <div className="grid gap-6 md:grid-cols-3 mt-10">
-            <Link href="/product/add" className="text-center p-6 bg-maroon-900 text-white rounded-xl shadow hover:bg-maroon-600">Add Product</Link>
-            <Link href="/favorites" className="text-center p-6 bg-maroon-900 text-white rounded-xl shadow hover:bg-maroon-600">Favorited Listings</Link>
-            <Link href="/swap-history" className="text-center p-6 bg-maroon-900 text-white rounded-xl shadow hover:bg-maroon-600">Swap History</Link>
+            <Link
+              href="/swap-requests"
+              className="text-center p-6 bg-maroon-900 text-white rounded-xl shadow hover:bg-maroon-600 flex items-center justify-center text-lg font-semibold">
+              View Swap Requests
+            </Link>
+            <Link
+              href="/favorites"
+              className="text-center p-6 bg-maroon-900 text-white rounded-xl shadow hover:bg-maroon-600 flex items-center justify-center text-lg font-semibold">
+              Favorited Listings
+            </Link>
+            <Link
+              href="/swap-history"
+              className="text-center p-6 bg-maroon-900 text-white rounded-xl shadow hover:bg-maroon-600 flex items-center justify-center text-lg font-semibold">
+              Swap History
+            </Link>
           </div>
         </div>
       </div>
