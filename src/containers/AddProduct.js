@@ -84,6 +84,7 @@ const AddProduct = () => {
 				...credentials,
 				imageURL: imageUrl,
 				user_id: user.uid,
+				requestedBy: [],
 				date: new Date().toISOString().split("T")[0],
 				time: new Date().toLocaleTimeString(),
 				createdAt: serverTimestamp(),

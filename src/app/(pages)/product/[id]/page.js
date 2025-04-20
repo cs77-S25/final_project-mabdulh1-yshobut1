@@ -2,12 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc, deleteDoc } from "firebase/firestore";
 import { db, auth } from "@/utils/firebase";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import Navbar from "@/containers/public/Navbar";
+import {
+  doc,
+  getDoc,
+  deleteDoc,
+  updateDoc,
+  arrayUnion,
+  serverTimestamp,
+  collection,
+  addDoc,
+  getDocs,
+} from "firebase/firestore";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -15,7 +25,10 @@ const ProductDetail = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const user = auth.currentUser;
+  const [myListings, setMyListings] = useState([]);
+  const [selectedOfferId, setSelectedOfferId] = useState("");
 
+  // Fetch product details
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -33,10 +46,56 @@ const ProductDetail = () => {
     fetchProduct();
   }, [id]);
 
+  // Fetch current user's own listings
+  useEffect(() => {
+    const fetchUserListings = async () => {
+      if (!user) return;
+      const listingsSnap = await getDocs(collection(db, "listings"));
+      const userListings = [];
+      listingsSnap.forEach(doc => {
+        const data = doc.data();
+        if (data.user_id === user.uid) {
+          userListings.push({ id: doc.id, ...data });
+        }
+      });
+      setMyListings(userListings);
+    };
+
+    fetchUserListings();
+  }, [user]);
+
   const handleDelete = async () => {
     await deleteDoc(doc(db, "listings", id));
     toast.success("Listing deleted");
     router.push("/explore");
+  };
+
+  const sendSwapRequest = async () => {
+    if (!user || !product || !selectedOfferId) {
+      toast.error("Please select one of your items to offer.");
+      return;
+    }
+
+    try {
+      const requestsCol = collection(db, "listings", product.id, "swapRequests");
+
+      await addDoc(requestsCol, {
+        fromUid: user.uid,
+        offeredListing: selectedOfferId,
+        message: "",
+        status: "pending",
+        createdAt: serverTimestamp(),
+      });
+
+      toast.success("Swap request sent!");
+      setProduct(prev => ({
+        ...prev,
+        requestedBy: [...(prev.requestedBy || []), user.uid],
+      }));
+    } catch (err) {
+      console.error("Swap request error:", err);
+      toast.error("Failed to send swap request");
+    }
   };
 
   if (loading) return <p className="text-center mt-10 text-lg">Loading...</p>;
@@ -67,7 +126,6 @@ const ProductDetail = () => {
               </ul>
             </div>
 
-            {/* User options */}
             {user?.uid === product.user_id ? (
               <div className="flex flex-wrap gap-4 mt-6">
                 <Link
@@ -84,9 +142,40 @@ const ProductDetail = () => {
                 </button>
               </div>
             ) : (
-              <button className="mt-6 px-4 py-2 bg-maroon-900 hover:bg-maroon-700 text-white rounded-lg w-full">
-                Request Swap
-              </button>
+              <>
+                {/* Offer selector dropdown */}
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Choose one of your listings to offer:
+                  </label>
+                  <select
+                    value={selectedOfferId}
+                    onChange={(e) => setSelectedOfferId(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  >
+                    <option value="">Select your listing</option>
+                    {myListings.map(listing => (
+                      <option key={listing.id} value={listing.id}>
+                        {listing.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  disabled={product?.requestedBy?.includes(user?.uid)}
+                  onClick={sendSwapRequest}
+                  className={`mt-4 px-4 py-2 rounded-lg w-full transition ${
+                    product?.requestedBy?.includes(user?.uid)
+                      ? "bg-gray-400 text-white cursor-not-allowed"
+                      : "bg-maroon-900 hover:bg-maroon-700 text-white"
+                  }`}
+                >
+                  {product?.requestedBy?.includes(user?.uid)
+                    ? "Swap Requested"
+                    : "Request Swap"}
+                </button>
+              </>
             )}
           </div>
         </div>

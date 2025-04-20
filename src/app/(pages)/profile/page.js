@@ -7,6 +7,8 @@ import { auth, db, storage } from "@/utils/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Navbar from "@/containers/public/Navbar";
+import toast from "react-hot-toast";
+
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
@@ -18,16 +20,20 @@ const ProfilePage = () => {
     const fetchProfile = async () => {
       const user = auth.currentUser;
       if (!user) return;
-
+  
       const userRef = doc(db, "users", user.uid);
       const snap = await getDoc(userRef);
       if (snap.exists()) {
-        setUserData({ id: user.uid, ...snap.data() });
+        const profile = { id: user.uid, ...snap.data() };
+        setUserData(profile);
+        localStorage.setItem("userProfile", JSON.stringify(profile));
       }
     };
-
+  
     fetchProfile();
   }, []);
+  
+
 
 //   const handleFileChange = (e) => {
 //     setNewAvatar(e.target.files[0]);
@@ -44,27 +50,46 @@ const ProfilePage = () => {
 
   const handleProfileUpdate = async () => {
     if (!userData) return;
-
+  
     let avatarURL = userData.avatar || "";
-    if (newAvatar) {
-      const fileRef = ref(storage, `avatars/${userData.id}`);
-      await uploadBytes(fileRef, newAvatar);
-      avatarURL = await getDownloadURL(fileRef);
+  
+    try {
+      // Upload avatar if changed
+      if (newAvatar) {
+        const fileRef = ref(storage, `avatars/${userData.id}`);
+        await uploadBytes(fileRef, newAvatar);
+        avatarURL = await getDownloadURL(fileRef);
+      }
+  
+      // Prepare updated profile
+      const updatedProfile = {
+        name: userData.name || "",
+        bio: userData.bio || "",
+        avatar: avatarURL,
+      };
+  
+      // Update Firestore
+      const userRef = doc(db, "users", userData.id);
+      await updateDoc(userRef, updatedProfile);
+  
+      // Sync state and localStorage
+      const fullUserData = { id: userData.id, ...updatedProfile };
+      setUserData(fullUserData);
+      localStorage.setItem("userProfile", JSON.stringify(fullUserData));
+  
+      toast.success("Profile updated!");
+    } catch (err) {
+      console.error("Profile update error:", err);
+      toast.error("Failed to update profile");
     }
-
-    const userRef = doc(db, "users", userData.id);
-    await updateDoc(userRef, {
-      name: userData.name,
-      bio: userData.bio,
-      avatar: avatarURL,
-    });
-	setUserData(prev => ({ ...prev, avatar: avatarURL }));
-    alert("Profile updated!");
   };
+  
+  
+
 
   const onChange = (e) => {
     setUserData({ ...userData, [e.target.name]: e.target.value });
-  };
+  };  
 
   if (!userData) { //LETS MAKE THIS FUN!
 	return (
