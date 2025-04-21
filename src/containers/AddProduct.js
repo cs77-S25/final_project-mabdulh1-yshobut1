@@ -195,7 +195,7 @@ const AddProduct = () => {
 													value={credentials.description}
 													placeholder="Enter product description"
 													onChange={onChange}
-													maxLength={150}
+													maxLength={500}
 													required
 													className="w-full mt-2 px-3 py-2 border-2 border-[darkgrey] focus:border-indigo-600 shadow-sm rounded-lg"
 												/>

@@ -28,6 +28,7 @@ const ProductDetail = () => {
   const [myListings, setMyListings] = useState([]);
   const [selectedOfferId, setSelectedOfferId] = useState("");
   const [swapRequests, setSwapRequests] = useState([]);
+  const [message, setMessage] = useState("");
 
 
   // Fetch product details
@@ -45,22 +46,22 @@ const ProductDetail = () => {
       }
     };
 
-    useEffect(() => {
-      const fetchRequests = async () => {
-        if (!user || user.uid !== product?.user_id) return;
-    
-        const requestsRef = collection(db, "listings", product.id, "swapRequests");
-        const snap = await getDocs(requestsRef);
-        const reqs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setSwapRequests(reqs);
-      };
-    
-      fetchRequests();
-    }, [user, product]);
-    
-
     fetchProduct();
   }, [id]);
+
+  // 🔧 Moved this useEffect to top level (not nested)
+  useEffect(() => {
+    const fetchRequests = async () => {
+      if (!user || !product || user.uid !== product.user_id) return;
+
+      const requestsRef = collection(db, "listings", product.id, "swapRequests");
+      const snap = await getDocs(requestsRef);
+      const reqs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSwapRequests(reqs);
+    };
+
+    fetchRequests();
+  }, [user, product]);
 
   // Fetch current user's own listings
   useEffect(() => {
@@ -115,7 +116,7 @@ const ProductDetail = () => {
         fromName: user.displayName || "",
         fromEmail: user.email || "",
         offeredListing: selectedOfferId,
-        message: "",
+        message: message.trim(),
         status: "pending",
         createdAt: serverTimestamp(),
       });
@@ -226,6 +227,18 @@ const ProductDetail = () => {
                     ))}
                   </select>
                 </div>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Add a message to the listing owner (optional):
+                  </label>
+                  <textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Hi! I’d love to trade. Let me know what works for you!"
+                    rows={3}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  />
+                </div>
 
                 <button
                   disabled={product?.requestedBy?.includes(user?.uid)}
@@ -235,11 +248,14 @@ const ProductDetail = () => {
                       ? "bg-gray-400 text-white cursor-not-allowed"
                       : "bg-maroon-900 hover:bg-maroon-700 text-white"
                   }`}
+      
                 >
                   {product?.requestedBy?.includes(user?.uid)
                     ? "Swap Requested"
                     : "Request Swap"}
+                    
                 </button>
+        
               </>
             )}
           </div>

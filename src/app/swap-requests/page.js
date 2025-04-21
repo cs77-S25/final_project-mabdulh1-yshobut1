@@ -47,18 +47,42 @@ const SwapRequestsPage = () => {
       const reqRef = doc(db, "listings", req.listingId, "swapRequests", req.id);
       await updateDoc(reqRef, { status: "accepted" });
   
-      toast.success(`Congrats! You've accepted the swap. Contact ${req.fromEmail} to confirm time & place.`, {
-        duration: 8000,
-      });
-  
+      // Update local state
       setRequests(prev =>
         prev.map(r => r.id === req.id ? { ...r, status: "accepted" } : r)
       );
+  
+      // 🎉 Notify user with the email
+      toast(
+        (t) => (
+          <div className="text-sm">
+            <p className="font-semibold text-green-700">Swap accepted!</p>
+            <p className="mt-1">Contact <span className="font-mono text-blue-600">{req.fromEmail}</span> to finalize the swap.</p>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="mt-2 text-xs underline text-gray-500 hover:text-gray-700"
+            >
+              Dismiss
+            </button>
+          </div>
+        ),
+        {
+          duration: 8000,
+          style: {
+            border: "1px solid #22c55e",
+            padding: "16px",
+            color: "#065f46",
+            background: "#ecfdf5",
+          },
+        }
+      );
+  
     } catch (err) {
       console.error("Failed to accept swap:", err);
       toast.error("Failed to accept swap.");
     }
   };
+  
   
   return (
     <>
