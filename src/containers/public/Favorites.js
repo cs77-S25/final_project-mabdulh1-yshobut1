@@ -1,5 +1,5 @@
 "use client";
-import Navbar from "/home/mabdulh1/cs77/final_project-mabdulh1-yshobut1/src/containers/public/Navbar.js";
+import Navbar from "@/containers/public/Navbar";
 
 const FavoritesComponent = () => {
 	return (
