@@ -40,6 +40,20 @@ const ProductDetails = () => {
 
 	if (!product) return <div className="p-10 text-center">Product not found.</div>;
 
+	if (product.isSwapped) {
+		return (
+		  <div className="p-10 text-center text-maroon-900">
+			<h2 className="text-2xl font-semibold mb-2">This item has already been swapped! 🤝</h2>
+			<p className="text-gray-600">Check the Explore page for other listings available.</p>
+			<Link
+			  href="/explore"
+			  className="inline-block mt-4 bg-maroon-900 hover:bg-maroon-700 text-white px-6 py-2 rounded-lg">
+			  Back to Explore
+			</Link>
+		  </div>
+		);
+	}
+
 	return (
 		<div className="max-w-4xl mx-auto p-8">
 			<h1 className="text-3xl font-bold mb-4">{product.title}</h1>

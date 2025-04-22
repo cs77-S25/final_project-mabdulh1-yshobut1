@@ -50,7 +50,10 @@ const SwapRequestsPage = () => {
   
       // Accept the selected one
       await updateDoc(acceptedRequestRef, { status: "accepted" });
-  
+
+      // Mark the listing as swapped so it doesn't show on Explore page
+      await updateDoc(listingRef, { isSwapped: true });
+
       // Fetch and reject all other requests
       const swapsSnap = await getDocs(collection(db, "listings", req.listingId, "swapRequests"));
       const otherRequests = swapsSnap.docs.filter(d => d.id !== req.id);
