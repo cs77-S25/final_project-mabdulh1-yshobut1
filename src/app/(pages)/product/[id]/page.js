@@ -12,7 +12,6 @@ import {
   getDoc,
   deleteDoc,
   updateDoc,
-  arrayUnion,
   serverTimestamp,
   collection,
   addDoc,
@@ -30,7 +29,6 @@ const ProductDetail = () => {
   const [swapRequests, setSwapRequests] = useState([]);
   const [message, setMessage] = useState("");
   const [hasAcceptedRequest, setHasAcceptedRequest] = useState(false);
-
 
   // Fetch product details
   useEffect(() => {
@@ -50,7 +48,7 @@ const ProductDetail = () => {
     fetchProduct();
   }, [id]);
 
-  // 🔧 Moved this useEffect to top level (not nested)
+  // Fetch requests
   useEffect(() => {
     const fetchRequests = async () => {
       if (!user || !product || user.uid !== product.user_id) return;
@@ -60,7 +58,6 @@ const ProductDetail = () => {
       const reqs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setSwapRequests(reqs);
 
-
       const anyAccepted = reqs.some(r => r.status === "accepted");
       setHasAcceptedRequest(anyAccepted);
     };
@@ -68,18 +65,14 @@ const ProductDetail = () => {
     fetchRequests();
   }, [user, product]);
 
-  // Fetch current user's own listings
+  // Fetch current user's listings
   useEffect(() => {
     const fetchUserListings = async () => {
       if (!user) return;
       const listingsSnap = await getDocs(collection(db, "listings"));
-      const userListings = [];
-      listingsSnap.forEach(doc => {
-        const data = doc.data();
-        if (data.user_id === user.uid) {
-          userListings.push({ id: doc.id, ...data });
-        }
-      });
+      const userListings = listingsSnap.docs
+        .filter(doc => doc.data().user_id === user.uid)
+        .map(doc => ({ id: doc.id, ...doc.data() }));
       setMyListings(userListings);
     };
 
@@ -92,30 +85,35 @@ const ProductDetail = () => {
     router.push("/explore");
   };
 
+  // ✅ Moved up to fix scope issue
+  const updateSwapRequestStatus = async (requestId, status) => {
+    const requestRef = doc(db, "listings", product.id, "swapRequests", requestId);
+    try {
+      await updateDoc(requestRef, { status });
+
+      setSwapRequests(prev =>
+        prev.map(r => (r.id === requestId ? { ...r, status } : r))
+      );
+
+      if (status === "accepted") {
+        setHasAcceptedRequest(true);
+        toast.success("Swap accepted! The requester will be notified.");
+      } else if (status === "rejected") {
+        toast("You rejected the swap request.", {
+          icon: "❌",
+        });
+      }
+    } catch (err) {
+      toast.error("Failed to update request");
+      console.error(err);
+    }
+  };
+
   const sendSwapRequest = async () => {
     if (!user || !product || !selectedOfferId) {
       toast.error("Please select one of your items to offer.");
       return;
     }
-
-    const updateSwapRequestStatus = async (requestId, status) => {
-      const requestRef = doc(db, "listings", product.id, "swapRequests", requestId);
-      try {
-        await updateDoc(requestRef, { status });
-    
-        // Update UI
-        setSwapRequests(prev =>
-          prev.map(r => r.id === requestId ? { ...r, status } : r)
-        );
-    
-        toast.success(`Request ${status}`);
-      } catch (err) {
-        toast.error("Failed to update request");
-        console.error(err);
-      }
-    };
-    
-    
 
     try {
       const requestsCol = collection(db, "listings", product.id, "swapRequests");
@@ -129,7 +127,6 @@ const ProductDetail = () => {
         status: "pending",
         createdAt: serverTimestamp(),
       });
-      
 
       toast.success("Swap request sent!");
       setProduct(prev => ({
@@ -184,42 +181,40 @@ const ProductDetail = () => {
                 >
                   Delete Listing
                 </button>
+
                 {swapRequests.length > 0 && (
-  <div className="mt-6">
-    <h2 className="text-xl font-semibold mb-2">Swap Requests:</h2>
-    {swapRequests.map(req => (
-      <div key={req.id} className="border p-4 rounded-lg mb-4 bg-gray-50">
-        <p><strong>From:</strong> {req.fromUid}</p>
-        <p><strong>Offering:</strong> {req.offeredListing}</p>
-        <p><strong>Status:</strong> {req.status}</p>
-        {req.message && <p><strong>Message:</strong> {req.message}</p>}
+                  <div className="mt-6">
+                    <h2 className="text-xl font-semibold mb-2">Swap Requests:</h2>
+                    {swapRequests.map(req => (
+                      <div key={req.id} className="border p-4 rounded-lg mb-4 bg-gray-50">
+                        <p><strong>From:</strong> {req.fromUid}</p>
+                        <p><strong>Offering:</strong> {req.offeredListing}</p>
+                        <p><strong>Status:</strong> {req.status}</p>
+                        {req.message && <p><strong>Message:</strong> {req.message}</p>}
 
-        {req.status === "pending" && (
-          <div className="flex gap-4 mt-2">
-            <button
-              onClick={() => updateSwapRequestStatus(req.id, "accepted")}
-              className="bg-green-600 text-white px-4 py-1 rounded"
-            >
-              Accept
-            </button>
-            <button
-              onClick={() => updateSwapRequestStatus(req.id, "rejected")}
-              className="bg-red-600 text-white px-4 py-1 rounded"
-            >
-              Reject
-            </button>
-          </div>
-        )}
-
-      </div>
-    ))}
-  </div>
-)}
-
+                        {req.status === "pending" && (
+                          <div className="flex gap-4 mt-2">
+                            <button
+                              onClick={() => updateSwapRequestStatus(req.id, "accepted")}
+                              className="bg-green-600 text-white px-4 py-1 rounded"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => updateSwapRequestStatus(req.id, "rejected")}
+                              className="bg-red-600 text-white px-4 py-1 rounded"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <>
-                {/* Offer selector dropdown */}
                 <div className="mt-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Choose one of your listings to offer:
@@ -244,7 +239,7 @@ const ProductDetail = () => {
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Hi! I’d love to trade. Let me know what works for you!"
+                    placeholder="Hi! I’d love to trade. Let me know what works for you via email!"
                     rows={3}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                   />
@@ -267,8 +262,6 @@ const ProductDetail = () => {
                     ? "Swap Requested"
                     : "Request Swap"}
                 </button>
-
-        
               </>
             )}
           </div>
