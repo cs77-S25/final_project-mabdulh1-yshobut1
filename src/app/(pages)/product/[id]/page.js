@@ -29,6 +29,7 @@ const ProductDetail = () => {
   const [selectedOfferId, setSelectedOfferId] = useState("");
   const [swapRequests, setSwapRequests] = useState([]);
   const [message, setMessage] = useState("");
+  const [hasAcceptedRequest, setHasAcceptedRequest] = useState(false);
 
 
   // Fetch product details
@@ -58,6 +59,10 @@ const ProductDetail = () => {
       const snap = await getDocs(requestsRef);
       const reqs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setSwapRequests(reqs);
+
+
+      const anyAccepted = reqs.some(r => r.status === "accepted");
+      setHasAcceptedRequest(anyAccepted);
     };
 
     fetchRequests();
@@ -97,15 +102,19 @@ const ProductDetail = () => {
       const requestRef = doc(db, "listings", product.id, "swapRequests", requestId);
       try {
         await updateDoc(requestRef, { status });
-        toast.success(`Request ${status}`);
+    
+        // Update UI
         setSwapRequests(prev =>
           prev.map(r => r.id === requestId ? { ...r, status } : r)
         );
+    
+        toast.success(`Request ${status}`);
       } catch (err) {
         toast.error("Failed to update request");
         console.error(err);
       }
     };
+    
     
 
     try {
@@ -201,6 +210,7 @@ const ProductDetail = () => {
             </button>
           </div>
         )}
+
       </div>
     ))}
   </div>
@@ -241,20 +251,23 @@ const ProductDetail = () => {
                 </div>
 
                 <button
-                  disabled={product?.requestedBy?.includes(user?.uid)}
+                  disabled={
+                    hasAcceptedRequest || product?.requestedBy?.includes(user?.uid)
+                  }
                   onClick={sendSwapRequest}
                   className={`mt-4 px-4 py-2 rounded-lg w-full transition ${
-                    product?.requestedBy?.includes(user?.uid)
+                    hasAcceptedRequest || product?.requestedBy?.includes(user?.uid)
                       ? "bg-gray-400 text-white cursor-not-allowed"
                       : "bg-maroon-900 hover:bg-maroon-700 text-white"
                   }`}
-      
                 >
-                  {product?.requestedBy?.includes(user?.uid)
+                  {hasAcceptedRequest
+                    ? "Swap Unavailable"
+                    : product?.requestedBy?.includes(user?.uid)
                     ? "Swap Requested"
                     : "Request Swap"}
-                    
                 </button>
+
         
               </>
             )}

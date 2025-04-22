@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 const SwapRequestsPage = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const pendingRequests = requests.filter(req => req.status === "pending");
   const user = auth.currentUser;
 
   useEffect(() => {
@@ -44,20 +45,42 @@ const SwapRequestsPage = () => {
 
   const handleAcceptSwap = async (req) => {
     try {
-      const reqRef = doc(db, "listings", req.listingId, "swapRequests", req.id);
-      await updateDoc(reqRef, { status: "accepted" });
+      const listingRef = doc(db, "listings", req.listingId);
+      const acceptedRequestRef = doc(db, "listings", req.listingId, "swapRequests", req.id);
+  
+      // Accept the selected one
+      await updateDoc(acceptedRequestRef, { status: "accepted" });
+  
+      // Fetch and reject all other requests
+      const swapsSnap = await getDocs(collection(db, "listings", req.listingId, "swapRequests"));
+      const otherRequests = swapsSnap.docs.filter(d => d.id !== req.id);
+  
+      await Promise.all(
+        otherRequests.map(r =>
+          updateDoc(doc(db, "listings", req.listingId, "swapRequests", r.id), {
+            status: "rejected",
+          })
+        )
+      );
   
       // Update local state
       setRequests(prev =>
-        prev.map(r => r.id === req.id ? { ...r, status: "accepted" } : r)
+        prev.map(r =>
+          r.listingId === req.listingId
+            ? r.id === req.id
+              ? { ...r, status: "accepted" }
+              : { ...r, status: "rejected" }
+            : r
+        )
       );
   
-      // 🎉 Notify user with the email
       toast(
         (t) => (
           <div className="text-sm">
             <p className="font-semibold text-green-700">Swap accepted!</p>
-            <p className="mt-1">Contact <span className="font-mono text-blue-600">{req.fromEmail}</span> to finalize the swap.</p>
+            <p className="mt-1">
+              Contact <span className="font-mono text-blue-600">{req.fromEmail}</span> to finalize the swap.
+            </p>
             <button
               onClick={() => toast.dismiss(t.id)}
               className="mt-2 text-xs underline text-gray-500 hover:text-gray-700"
@@ -76,12 +99,12 @@ const SwapRequestsPage = () => {
           },
         }
       );
-  
     } catch (err) {
       console.error("Failed to accept swap:", err);
       toast.error("Failed to accept swap.");
     }
   };
+  
   
   
   return (
