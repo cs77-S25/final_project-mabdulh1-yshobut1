@@ -6,7 +6,6 @@ export async function PUT(req, { params }) {
   const body = await req.json();
 
   
-//NOTIMPLEMENTED YET
   try {
     const listingRef = doc(db, "listings", id);
     await updateDoc(listingRef, body);
