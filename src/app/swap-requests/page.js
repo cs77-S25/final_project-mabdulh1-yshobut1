@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db, auth } from "@/utils/firebase";
-import { getDocs, collection, doc, updateDoc } from "firebase/firestore";
+import { getDocs, getDoc, collection, doc, updateDoc } from "firebase/firestore";
 import Navbar from "@/containers/public/Navbar";
 import toast from "react-hot-toast";
 
@@ -15,33 +15,51 @@ const SwapRequestsPage = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       if (!user) return;
-
+  
       const allRequests = [];
-
+  
       // 1. Get listings owned by this user
       const listingsSnap = await getDocs(collection(db, "listings"));
       const ownedListings = listingsSnap.docs.filter(doc => doc.data().user_id === user.uid);
-
+  
       // 2. For each listing, check if it has swapRequests
       for (const listing of ownedListings) {
         const swapRequestsRef = collection(db, "listings", listing.id, "swapRequests");
         const swapsSnap = await getDocs(swapRequestsRef);
-        swapsSnap.forEach(req => {
+  
+        for (const reqDoc of swapsSnap.docs) {
+          const reqData = reqDoc.data();
+          const offeredListingId = reqData.offeredListing;
+  
+          let offeredListingData = null;
+          try {
+            const offeredListingRef = doc(db, "listings", offeredListingId);
+            const offeredListingSnap = await getDoc(offeredListingRef);
+            if (offeredListingSnap.exists()) {
+              offeredListingData = offeredListingSnap.data();
+            }
+          } catch (error) {
+            console.error("Failed to fetch offered listing:", error);
+          }
+  
           allRequests.push({
-            id: req.id,
-            ...req.data(),
+            id: reqDoc.id,
+            ...reqData,
             listingId: listing.id,
             listingTitle: listing.data().title,
+            offeredListingData, // now this is attached
           });
-        });
-      }
-
+        } 
+      } 
+  
+      // Now after all listings and requests are processed:
       setRequests(allRequests);
       setLoading(false);
     };
-
+  
     fetchRequests();
   }, [user]);
+  
 
   const handleAcceptSwap = async (req) => {
     try {
@@ -148,9 +166,22 @@ const SwapRequestsPage = () => {
                   <p>
                     <strong>👤 From:</strong> {req.fromName || "Anonymous"} ({req.fromEmail})
                   </p>
-                  <p>
-                    <strong>🎁 Offered Listing ID:</strong> <span className="font-mono">{req.offeredListing}</span>
-                  </p>
+                  {req.offeredListingData ? (
+                    <div className="flex items-center gap-4 mt-2">
+                      <img
+                        src={req.offeredListingData.imageURL || "/placeholder.png"}
+                        alt={req.offeredListingData.title || "Offered item"}
+                        className="w-16 h-16 object-cover rounded-md"
+                      />
+                      <div>
+                        <p className="font-semibold">🎁 Offered: {req.offeredListingData.title || "Untitled Listing"}</p>
+                        <p className="text-gray-500 text-sm font-mono">ID: {req.offeredListing}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">Offered listing info unavailable.</p>
+                  )}
+
                   {req.message && (
                     <p>
                       <strong>💬 Message:</strong> <span className="italic">{req.message}</span>

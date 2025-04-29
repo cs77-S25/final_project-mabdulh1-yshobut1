@@ -84,6 +84,7 @@ const AddProduct = () => {
 				...credentials,
 				imageURL: imageUrl,
 				user_id: user.uid,
+				ownerEmail: user.email,
 				requestedBy: [],
 				date: new Date().toISOString().split("T")[0],
 				time: new Date().toLocaleTimeString(),
@@ -174,16 +175,22 @@ const AddProduct = () => {
 											{/* category */}
 											<div className="sm:col-span-3">
 												<label className="text-sm text-gray-600 font-bold">Category</label>
-												<input
-													type="text"
+												<select
 													name="category"
 													value={credentials.category}
-													placeholder="Enter product category"
 													onChange={onChange}
-													maxLength={30}
 													required
 													className="w-full mt-2 px-3 py-2 border-2 border-[darkgrey] focus:border-indigo-600 shadow-sm rounded-lg"
-												/>
+													>
+													<option value="">Select a category</option>
+													<option value="Tech">Tech</option>
+													<option value="Books">Books</option>
+													<option value="Clothing">Clothing</option>
+													<option value="Furniture">Furniture</option>
+													<option value="Sports">Sports</option>
+													<option value="Miscellaneous">Miscellaneous</option>
+													</select>
+
 											</div>
 
 											{/* Description */}

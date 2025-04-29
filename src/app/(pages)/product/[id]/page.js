@@ -36,17 +36,43 @@ const ProductDetail = () => {
       try {
         const docSnap = await getDoc(doc(db, "listings", id));
         if (docSnap.exists()) {
-          setProduct({ id, ...docSnap.data() });
+          const productData = docSnap.data();
+          console.log("Fetched product data:", productData);
+    
+          let ownerEmail = "";
+          try {
+            if (productData.user_id) {
+              const ownerRef = doc(db, "users", productData.user_id);
+              const ownerSnap = await getDoc(ownerRef);
+    
+              console.log("user_id:", productData.user_id);
+              console.log("ownerSnap.exists:", ownerSnap.exists());
+    
+              if (ownerSnap.exists()) {
+                const userData = ownerSnap.data();
+                console.log("owner data:", userData);
+                ownerEmail = userData.email || "";
+              }
+            } else {
+              console.warn("No user_id in product data.");
+            }
+          } catch (e) {
+            console.warn("Could not fetch owner email:", e);
+          }
+    
+          setProduct({ id, ...productData, ownerEmail });
         }
       } catch (err) {
-        console.error("Failed to load product", err);
+        console.error("Failed to load product:", err);
       } finally {
         setLoading(false);
       }
     };
-
+    
+  
     fetchProduct();
   }, [id]);
+  
 
   // Fetch requests
   useEffect(() => {
@@ -168,6 +194,7 @@ const ProductDetail = () => {
             </div>
 
             {user?.uid === product.user_id ? (
+              // OWNER VIEW
               <div className="flex flex-wrap gap-4 mt-6">
                 <Link
                   href={`/product/edit/${id}`}
@@ -191,7 +218,6 @@ const ProductDetail = () => {
                         <p><strong>Offering:</strong> {req.offeredListing}</p>
                         <p><strong>Status:</strong> {req.status}</p>
                         {req.message && <p><strong>Message:</strong> {req.message}</p>}
-
                         {req.status === "pending" && (
                           <div className="flex gap-4 mt-2">
                             <button
@@ -213,7 +239,19 @@ const ProductDetail = () => {
                   </div>
                 )}
               </div>
+            ) : product.giveAway ? (
+              // GIVEAWAY UI FOR NON-OWNER
+              <div className="mt-6 bg-green-100 text-green-900 text-center p-4 rounded-lg font-medium shadow-sm">
+              🎁 This item is being given away for free! No need to offer a swap.
+              <br />
+              Please contact the owner directly:
+              <div className="mt-2 font-mono text-sm text-blue-800 underline">
+                {product.ownerEmail || "Email not available"}
+              </div>
+            </div>
+
             ) : (
+              // SWAP UI FOR NON-OWNER
               <>
                 <div className="mt-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -264,6 +302,7 @@ const ProductDetail = () => {
                 </button>
               </>
             )}
+
           </div>
         </div>
       </div>
