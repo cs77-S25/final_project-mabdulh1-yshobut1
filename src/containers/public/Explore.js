@@ -133,8 +133,9 @@ const Explore = () => {
 						</div>
 
 						<section className="p-4 opacity-0 hover:opacity-100 duration-300 absolute inset-0 z-10 bg-[#000000d9] text-white flex flex-col justify-end">
-							<p className="text-sm">Swap</p>
-
+						<p className="text-sm">
+							{product.giveAway ? "Free" : "Swap"}
+						</p>
 							<p className="uppercase tracking-wide text-lg font-bold">
 							{product.title}
 							</p>
